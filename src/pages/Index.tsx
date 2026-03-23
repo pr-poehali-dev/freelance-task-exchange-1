@@ -5,13 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const MODERATION_KEY = "admin2024";
 
-type Platform = "telegram" | "whatsapp" | "vk" | "email" | "other";
 type TaskStatus = "pending" | "approved" | "rejected";
 
 interface Review {
@@ -38,7 +36,7 @@ interface Task {
   title: string;
   description: string;
   price: number | null;
-  platform: Platform;
+  platform: string;
   contact: string;
   status: TaskStatus;
   authorId: number;
@@ -48,34 +46,20 @@ interface Task {
   negotiable: boolean;
 }
 
-const PLATFORM_LABELS: Record<Platform, { label: string; icon: string; color: string }> = {
-  telegram: { label: "Telegram", icon: "Send", color: "bg-blue-50 text-blue-600 border-blue-100" },
-  whatsapp: { label: "WhatsApp", icon: "MessageCircle", color: "bg-green-50 text-green-600 border-green-100" },
-  vk: { label: "ВКонтакте", icon: "Users", color: "bg-indigo-50 text-indigo-600 border-indigo-100" },
-  email: { label: "Email", icon: "Mail", color: "bg-orange-50 text-orange-600 border-orange-100" },
-  other: { label: "Другое", icon: "Link", color: "bg-gray-50 text-gray-600 border-gray-100" },
-};
-
 const CATEGORIES = ["Все", "Тексты", "Дизайн", "Таблицы", "Переводы", "Реклама", "Аудио", "Фото", "Другое"];
 
 type Page = "home" | "create" | "profile" | "moderation";
 
-const SEED_USERS: AppUser[] = [
-  { id: 2, name: "Дарья К.", username: "darya_k", bio: "SMM-специалист, пишу тексты для соцсетей", avatar: "ДК", joinedAt: "Март 2024" },
-  { id: 3, name: "Игорь С.", username: "igor_s", bio: "Разработчик и дизайнер на фрилансе", avatar: "ИС", joinedAt: "Октябрь 2023" },
-];
-
 const SEED_TASKS: Task[] = [
-  { id: 1, title: "Написать текст для Instagram", description: "Нужны 5 постов для магазина одежды. Стиль — дружелюбный, молодёжный. Хэштеги в комплекте.", price: 800, platform: "telegram", contact: "@masha_smm", status: "approved", authorId: 2, authorName: "Дарья К.", createdAt: "2 часа назад", category: "Тексты", negotiable: false },
-  { id: 2, title: "Создать Excel-таблицу учёта расходов", description: "Таблица для малого бизнеса: доходы, расходы, остаток. Формулы и простой вид.", price: null, platform: "telegram", contact: "@petrov_biz", status: "approved", authorId: 3, authorName: "Игорь С.", createdAt: "5 часов назад", category: "Таблицы", negotiable: true },
-  { id: 3, title: "Перевести документ с английского", description: "2 страницы технического текста. Нужен точный перевод, не машинный.", price: 600, platform: "email", contact: "translate@work.ru", status: "approved", authorId: 2, authorName: "Дарья К.", createdAt: "Вчера", category: "Переводы", negotiable: false },
-  { id: 4, title: "Настроить рекламу ВКонтакте", description: "Настройка таргета для локального кафе. Бюджет до 3000₽ в месяц. Нужна аудитория — жители района.", price: 1200, platform: "vk", contact: "id12345678", status: "approved", authorId: 3, authorName: "Игорь С.", createdAt: "Вчера", category: "Реклама", negotiable: false },
-  { id: 5, title: "Озвучить 3-минутный ролик", description: "Корпоративный ролик для сайта. Нужен приятный мужской голос, без посторонних шумов.", price: 900, platform: "telegram", contact: "@voice_pro", status: "approved", authorId: 2, authorName: "Дарья К.", createdAt: "2 дня назад", category: "Аудио", negotiable: false },
+  { id: 1, title: "Написать текст для Instagram", description: "Нужны 5 постов для магазина одежды. Стиль — дружелюбный, молодёжный.", price: 800, platform: "Instagram", contact: "@masha_smm", status: "approved", authorId: 2, authorName: "Дарья К.", createdAt: "2 часа назад", category: "Тексты", negotiable: false },
+  { id: 2, title: "Создать Excel-таблицу учёта расходов", description: "Таблица для малого бизнеса: доходы, расходы, остаток. Формулы и простой вид.", price: null, platform: "Telegram", contact: "@petrov_biz", status: "approved", authorId: 3, authorName: "Игорь С.", createdAt: "5 часов назад", category: "Таблицы", negotiable: true },
+  { id: 3, title: "Перевести документ с английского", description: "2 страницы технического текста. Нужен точный перевод, не машинный.", price: 600, platform: "Email", contact: "@translate_ru", status: "approved", authorId: 2, authorName: "Дарья К.", createdAt: "Вчера", category: "Переводы", negotiable: false },
+  { id: 4, title: "Настроить рекламу ВКонтакте", description: "Настройка таргета для локального кафе. Бюджет до 3000₽ в месяц.", price: 1200, platform: "ВКонтакте", contact: "@cafe_target", status: "approved", authorId: 3, authorName: "Игорь С.", createdAt: "Вчера", category: "Реклама", negotiable: false },
+  { id: 5, title: "Озвучить 3-минутный ролик", description: "Корпоративный ролик для сайта. Нужен приятный мужской голос, без посторонних шумов.", price: 900, platform: "Telegram", contact: "@voice_pro", status: "approved", authorId: 2, authorName: "Дарья К.", createdAt: "2 дня назад", category: "Аудио", negotiable: false },
 ];
 
 const SEED_REVIEWS: Review[] = [
   { id: 1, authorId: 3, authorName: "Игорь С.", targetUserId: 2, rating: 5, text: "Дарья написала отличные тексты, всё быстро и качественно!", createdAt: "3 дня назад" },
-  { id: 2, authorId: 2, authorName: "Дарья К.", targetUserId: 3, rating: 4, text: "Хорошая работа, таблица получилась удобная. Небольшие задержки, но результат понравился.", createdAt: "Неделю назад" },
 ];
 
 function calcRating(reviews: Review[], userId: number): number {
@@ -92,8 +76,7 @@ function StarRating({ value, interactive = false, onChange }: { value: number; i
         <svg
           key={star}
           className={`w-4 h-4 transition-colors ${interactive ? "cursor-pointer" : ""} ${star <= (interactive ? (hovered || value) : Math.round(value)) ? "text-amber-400" : "text-gray-200"}`}
-          fill="currentColor"
-          viewBox="0 0 20 20"
+          fill="currentColor" viewBox="0 0 20 20"
           onMouseEnter={() => interactive && setHovered(star)}
           onMouseLeave={() => interactive && setHovered(0)}
           onClick={() => interactive && onChange && onChange(star)}
@@ -115,15 +98,12 @@ function RegisterModal({ onRegister }: { onRegister: (user: AppUser) => void }) 
     e.preventDefault();
     if (!form.name.trim() || !form.username.trim()) { setError("Имя и никнейм обязательны"); return; }
     const initials = form.name.trim().split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
-    const user: AppUser = {
-      id: Date.now(),
-      name: form.name.trim(),
+    onRegister({
+      id: Date.now(), name: form.name.trim(),
       username: form.username.trim().replace(/^@/, ""),
-      bio: form.bio.trim(),
-      avatar: initials,
+      bio: form.bio.trim(), avatar: initials,
       joinedAt: new Intl.DateTimeFormat("ru", { month: "long", year: "numeric" }).format(new Date()),
-    };
-    onRegister(user);
+    });
   };
 
   return (
@@ -132,15 +112,16 @@ function RegisterModal({ onRegister }: { onRegister: (user: AppUser) => void }) 
         <DialogHeader>
           <DialogTitle className="text-xl font-bold">Добро пожаловать!</DialogTitle>
         </DialogHeader>
-        <p className="text-sm text-muted-foreground -mt-1">Расскажите немного о себе, чтобы начать работу</p>
+        <p className="text-sm text-muted-foreground -mt-1">Расскажите о себе, чтобы начать работу</p>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4 pt-1">
           <div className="flex flex-col gap-1.5">
             <Label className="text-sm font-medium">Имя и фамилия</Label>
             <Input placeholder="Алексей Иванов" value={form.name} onChange={(e) => { setForm({ ...form, name: e.target.value }); setError(""); }} className="rounded-xl" />
           </div>
           <div className="flex flex-col gap-1.5">
-            <Label className="text-sm font-medium">Никнейм</Label>
-            <Input placeholder="@ivan_freelancer" value={form.username} onChange={(e) => { setForm({ ...form, username: e.target.value }); setError(""); }} className="rounded-xl" />
+            <Label className="text-sm font-medium">Telegram username</Label>
+            <Input placeholder="@username" value={form.username} onChange={(e) => { setForm({ ...form, username: e.target.value }); setError(""); }} className="rounded-xl" />
+            <p className="text-xs text-muted-foreground">Будет использован как контакт в заданиях</p>
           </div>
           <div className="flex flex-col gap-1.5">
             <Label className="text-sm font-medium">О себе <span className="text-muted-foreground font-normal">(необязательно)</span></Label>
@@ -159,9 +140,7 @@ function RegisterModal({ onRegister }: { onRegister: (user: AppUser) => void }) 
 // ─── Task Card ────────────────────────────────────────────────────────────────
 
 function TaskCard({ task, currentUserId, onContact, onDelete }: { task: Task; currentUserId: number | null; onContact: (t: Task) => void; onDelete: (id: number) => void }) {
-  const pl = PLATFORM_LABELS[task.platform];
   const isOwner = currentUserId === task.authorId;
-
   return (
     <div className="card-stagger animate-fade-in bg-white rounded-2xl border border-border p-5 flex flex-col gap-3 hover:shadow-lg hover:shadow-green-100 hover:-translate-y-0.5 transition-all duration-200 group">
       <div className="flex items-start justify-between gap-2">
@@ -173,17 +152,14 @@ function TaskCard({ task, currentUserId, onContact, onDelete }: { task: Task; cu
           <span className="text-lg font-bold text-primary">{task.negotiable || !task.price ? "Договорная" : `${task.price.toLocaleString("ru")}₽`}</span>
           {isOwner && (
             <button onClick={() => onDelete(task.id)} className="text-xs text-muted-foreground hover:text-destructive transition-colors flex items-center gap-0.5">
-              <Icon name="Trash2" size={12} />
-              Удалить
+              <Icon name="Trash2" size={12} />Удалить
             </button>
           )}
         </div>
       </div>
       <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">{task.description}</p>
       <div className="flex items-center justify-between mt-1">
-        <div className={`flex items-center gap-1.5 text-xs font-medium border rounded-full px-2.5 py-1 ${pl.color}`}>
-          <Icon name={pl.icon} size={12} /><span>{pl.label}</span>
-        </div>
+        <span className="text-xs font-medium text-muted-foreground bg-muted border border-border rounded-full px-2.5 py-1">{task.platform}</span>
         <span className="text-xs text-muted-foreground">{task.createdAt}</span>
       </div>
       <Button onClick={() => onContact(task)} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl font-medium text-sm h-9 mt-1">
@@ -197,16 +173,18 @@ function TaskCard({ task, currentUserId, onContact, onDelete }: { task: Task; cu
 
 function ContactModal({ task, onClose }: { task: Task | null; onClose: () => void }) {
   if (!task) return null;
-  const pl = PLATFORM_LABELS[task.platform];
   return (
     <Dialog open={!!task} onOpenChange={onClose}>
       <DialogContent className="rounded-2xl max-w-sm">
         <DialogHeader><DialogTitle className="text-lg font-semibold">Контакт заказчика</DialogTitle></DialogHeader>
         <div className="flex flex-col gap-4 pt-2">
           <p className="text-sm text-muted-foreground">{task.title}</p>
-          <div className={`flex items-center gap-3 p-4 rounded-xl border ${pl.color}`}>
-            <Icon name={pl.icon} size={20} />
-            <div><p className="text-xs text-muted-foreground">{pl.label}</p><p className="font-semibold text-sm">{task.contact}</p></div>
+          <div className="flex items-center gap-3 p-4 rounded-xl border bg-blue-50 text-blue-600 border-blue-100">
+            <Icon name="Send" size={20} />
+            <div>
+              <p className="text-xs text-muted-foreground">Telegram</p>
+              <p className="font-semibold text-sm">{task.contact.startsWith("@") ? task.contact : `@${task.contact}`}</p>
+            </div>
           </div>
           <p className="text-xs text-muted-foreground text-center">Напишите заказчику напрямую, представившись исполнителем с биржи</p>
         </div>
@@ -230,29 +208,30 @@ function HomePage({ tasks, currentUserId, onContact, onDelete }: { tasks: Task[]
   });
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
-      <div className="mb-8 animate-slide-up">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Лёгкие задания</h1>
-        <p className="text-muted-foreground">Найди подработку или размести своё задание за минуту</p>
+    <div className="max-w-5xl mx-auto px-4 py-6 pb-24">
+      <div className="mb-6 animate-slide-up">
+        <h1 className="text-2xl font-bold text-foreground mb-1">Лёгкие задания</h1>
+        <p className="text-sm text-muted-foreground">Найди подработку или размести своё задание</p>
       </div>
-      <div className="bg-white rounded-2xl border border-border p-4 mb-6 animate-fade-in flex flex-col sm:flex-row items-start sm:items-center gap-3">
-        <div className="flex gap-2 flex-wrap flex-1">
+
+      <div className="bg-white rounded-2xl border border-border p-3 mb-5 animate-fade-in">
+        <div className="flex gap-1.5 flex-wrap mb-3">
           {CATEGORIES.map((cat) => (
-            <button key={cat} onClick={() => setActiveCategory(cat)} className={`text-sm px-3 py-1.5 rounded-full font-medium transition-all duration-150 ${activeCategory === cat ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"}`}>{cat}</button>
+            <button key={cat} onClick={() => setActiveCategory(cat)} className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all duration-150 ${activeCategory === cat ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{cat}</button>
           ))}
         </div>
-        <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
-          <SelectTrigger className="w-44 h-9 rounded-xl text-sm shrink-0"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="new">Сначала новые</SelectItem>
-            <SelectItem value="price_asc">Дешевле</SelectItem>
-            <SelectItem value="price_desc">Дороже</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="flex gap-1.5">
+          {(["new", "price_asc", "price_desc"] as const).map((s) => {
+            const labels = { new: "Новые", price_asc: "Дешевле", price_desc: "Дороже" };
+            return <button key={s} onClick={() => setSortBy(s)} className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all ${sortBy === s ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{labels[s]}</button>;
+          })}
+        </div>
       </div>
+
       {sorted.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
-          <Icon name="Search" size={40} className="mx-auto mb-3 opacity-30" /><p>Заданий в этой категории пока нет</p>
+          <Icon name="Search" size={40} className="mx-auto mb-3 opacity-30" />
+          <p>Заданий в этой категории пока нет</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -266,16 +245,21 @@ function HomePage({ tasks, currentUserId, onContact, onDelete }: { tasks: Task[]
 // ─── Create Task Page ─────────────────────────────────────────────────────────
 
 function CreateTaskPage({ currentUser, onTaskCreated }: { currentUser: AppUser; onTaskCreated: (task: Task) => void }) {
-  const [form, setForm] = useState({ title: "", description: "", price: "", negotiable: false, platform: "telegram" as Platform, contact: "", category: "Другое" });
+  const [form, setForm] = useState({
+    title: "", description: "", price: "", negotiable: false,
+    platform: "", category: "Другое",
+  });
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title || !form.description || !form.contact) return;
+    if (!form.title || !form.description) return;
     const newTask: Task = {
       id: Date.now(), title: form.title, description: form.description,
       price: form.negotiable || !form.price ? null : Number(form.price),
-      platform: form.platform, contact: form.contact, status: "pending",
+      platform: form.platform || "Telegram",
+      contact: `@${currentUser.username}`,
+      status: "pending",
       authorId: currentUser.id, authorName: currentUser.name,
       createdAt: "Только что", category: form.category, negotiable: form.negotiable,
     };
@@ -285,7 +269,7 @@ function CreateTaskPage({ currentUser, onTaskCreated }: { currentUser: AppUser; 
 
   if (submitted) {
     return (
-      <div className="max-w-lg mx-auto px-4 py-20 text-center animate-scale-in">
+      <div className="max-w-lg mx-auto px-4 py-20 text-center pb-24 animate-scale-in">
         <div className="w-20 h-20 bg-accent rounded-full flex items-center justify-center mx-auto mb-6">
           <Icon name="CheckCircle" size={40} className="text-primary" />
         </div>
@@ -295,68 +279,67 @@ function CreateTaskPage({ currentUser, onTaskCreated }: { currentUser: AppUser; 
     );
   }
 
-  const contactPlaceholder: Record<Platform, string> = {
-    telegram: "@username", whatsapp: "+79001234567", vk: "id123456", email: "your@email.ru", other: "@username, телефон или ссылка",
-  };
-
   return (
-    <div className="max-w-lg mx-auto px-4 py-10">
-      <div className="mb-8 animate-slide-up">
+    <div className="max-w-lg mx-auto px-4 py-8 pb-24">
+      <div className="mb-7 animate-slide-up">
         <h1 className="text-2xl font-bold text-foreground mb-1">Биржа заданий</h1>
         <div className="h-px bg-border mt-3" />
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-7 animate-fade-in">
-        <div className="flex flex-col gap-2">
-          <Label className="text-base font-medium text-foreground">Платформа</Label>
-          <Select value={form.platform} onValueChange={(v) => setForm({ ...form, platform: v as Platform })}>
-            <SelectTrigger className="rounded-2xl h-14 text-base border-border bg-white"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="telegram">Telegram</SelectItem>
-              <SelectItem value="whatsapp">WhatsApp</SelectItem>
-              <SelectItem value="vk">ВКонтакте</SelectItem>
-              <SelectItem value="email">Email</SelectItem>
-              <SelectItem value="other">Другое</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6 animate-fade-in">
 
+        {/* Категория */}
         <div className="flex flex-col gap-2">
           <Label className="text-base font-medium text-foreground">Категория</Label>
-          <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-            <SelectTrigger className="rounded-2xl h-14 text-base border-border bg-white"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {CATEGORIES.filter((c) => c !== "Все").map((cat) => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-1.5 flex-wrap">
+            {CATEGORIES.filter((c) => c !== "Все").map((cat) => (
+              <button key={cat} type="button" onClick={() => setForm({ ...form, category: cat })} className={`text-sm px-3 py-1.5 rounded-full font-medium transition-all ${form.category === cat ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{cat}</button>
+            ))}
+          </div>
         </div>
 
+        {/* Название */}
         <div className="flex flex-col gap-2">
           <Label className="text-base font-medium text-foreground">Название</Label>
           <Input placeholder="Например: Написать посты для Instagram" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="rounded-2xl h-14 text-base border-border bg-white" required />
         </div>
 
+        {/* Платформа */}
+        <div className="flex flex-col gap-2">
+          <Label className="text-base font-medium text-foreground">Платформа</Label>
+          <Input placeholder="Telegram, Instagram, ВКонтакте, Email..." value={form.platform} onChange={(e) => setForm({ ...form, platform: e.target.value })} className="rounded-2xl h-14 text-base border-border bg-white" />
+        </div>
+
+        {/* Цена */}
         <div className="flex flex-col gap-2">
           <Label className="text-base font-medium text-foreground">Цена</Label>
           <Input type="number" placeholder="Пусто = договорная" min="1" value={form.negotiable ? "" : form.price} onChange={(e) => setForm({ ...form, price: e.target.value, negotiable: false })} disabled={form.negotiable} className="rounded-2xl h-14 text-base border-border bg-white disabled:opacity-50" />
         </div>
 
+        {/* Описание */}
         <div className="flex flex-col gap-2">
           <Label className="text-base font-medium text-foreground">Описание</Label>
           <Textarea placeholder="Опишите задачу" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="rounded-2xl text-base border-border bg-white resize-none" rows={5} required />
         </div>
 
+        {/* Связь */}
         <div className="flex flex-col gap-2">
           <Label className="text-base font-medium text-foreground">Связь с вами</Label>
-          <Input placeholder={contactPlaceholder[form.platform]} value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} className="rounded-2xl h-14 text-base border-border bg-white" required />
+          <div className="h-14 rounded-2xl border border-border bg-muted flex items-center px-4 gap-2">
+            <Icon name="Send" size={16} className="text-muted-foreground" />
+            <span className="text-base text-foreground">@{currentUser.username}</span>
+            <span className="text-xs text-muted-foreground ml-auto">Telegram</span>
+          </div>
+          <p className="text-xs text-muted-foreground">Контакт берётся из вашего профиля</p>
         </div>
 
+        {/* Договорная */}
         <div className="flex items-center gap-3">
           <Checkbox id="negotiable" checked={form.negotiable} onCheckedChange={(v) => setForm({ ...form, negotiable: !!v, price: v ? "" : form.price })} className="w-5 h-5 rounded-md border-2" />
           <Label htmlFor="negotiable" className="text-sm text-muted-foreground cursor-pointer">Цена договорная</Label>
         </div>
 
-        <Button type="submit" className="w-full rounded-2xl h-14 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground mt-2">
+        <Button type="submit" className="w-full rounded-2xl h-14 text-base font-bold bg-primary hover:bg-primary/90 text-primary-foreground mt-1">
           Опубликовать
         </Button>
       </form>
@@ -366,92 +349,124 @@ function CreateTaskPage({ currentUser, onTaskCreated }: { currentUser: AppUser; 
 
 // ─── Profile Page ─────────────────────────────────────────────────────────────
 
-function ProfilePage({ currentUser, users, tasks, reviews, onAddReview, onDeleteTask }: { currentUser: AppUser; users: AppUser[]; tasks: Task[]; reviews: Review[]; onAddReview: (r: Review) => void; onDeleteTask: (id: number) => void }) {
-  const [viewingId, setViewingId] = useState<number>(currentUser.id);
+function ProfilePage({ currentUser, onUpdateUser, tasks, reviews, onAddReview, onDeleteTask }: {
+  currentUser: AppUser; onUpdateUser: (u: AppUser) => void;
+  tasks: Task[]; reviews: Review[];
+  onAddReview: (r: Review) => void; onDeleteTask: (id: number) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ name: currentUser.name, username: currentUser.username, bio: currentUser.bio });
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewForm, setReviewForm] = useState({ rating: 5, text: "" });
 
-  const allUsers = [currentUser, ...users.filter((u) => u.id !== currentUser.id)];
-  const viewed = allUsers.find((u) => u.id === viewingId) ?? currentUser;
-  const userReviews = reviews.filter((r) => r.targetUserId === viewed.id);
-  const rating = calcRating(reviews, viewed.id);
-  const userTasks = tasks.filter((t) => t.authorId === viewed.id && t.status === "approved");
-  const isOwnProfile = viewed.id === currentUser.id;
-  const alreadyReviewed = reviews.some((r) => r.authorId === currentUser.id && r.targetUserId === viewed.id);
+  const userReviews = reviews.filter((r) => r.targetUserId === currentUser.id);
+  const rating = calcRating(reviews, currentUser.id);
+  const userTasks = tasks.filter((t) => t.authorId === currentUser.id && t.status === "approved");
+  const reviewWord = (n: number) => n === 1 ? "отзыв" : n < 5 ? "отзыва" : "отзывов";
+
+  const handleSave = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editForm.name.trim() || !editForm.username.trim()) return;
+    onUpdateUser({ ...currentUser, name: editForm.name.trim(), username: editForm.username.trim().replace(/^@/, ""), bio: editForm.bio.trim(), avatar: editForm.name.trim().split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase() });
+    setEditing(false);
+  };
 
   const handleReview = (e: React.FormEvent) => {
     e.preventDefault();
     if (!reviewForm.text.trim()) return;
-    onAddReview({ id: Date.now(), authorId: currentUser.id, authorName: currentUser.name, targetUserId: viewed.id, rating: reviewForm.rating, text: reviewForm.text.trim(), createdAt: "Только что" });
+    onAddReview({ id: Date.now(), authorId: -1, authorName: "Аноним", targetUserId: currentUser.id, rating: reviewForm.rating, text: reviewForm.text.trim(), createdAt: "Только что" });
     setShowReviewForm(false);
     setReviewForm({ rating: 5, text: "" });
   };
 
-  const reviewWord = (n: number) => n === 1 ? "отзыв" : n < 5 ? "отзыва" : "отзывов";
-
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
-      <div className="mb-6 animate-slide-up">
-        <h1 className="text-3xl font-bold text-foreground">Профиль</h1>
-      </div>
-
-      <div className="flex gap-2 mb-5 flex-wrap animate-fade-in">
-        {allUsers.map((u) => (
-          <button key={u.id} onClick={() => { setViewingId(u.id); setShowReviewForm(false); }} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium transition-all ${viewingId === u.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>
-            <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold">{u.avatar.slice(0, 1)}</span>
-            {u.name}
+    <div className="max-w-2xl mx-auto px-4 py-6 pb-24">
+      <div className="flex items-center justify-between mb-6 animate-slide-up">
+        <h1 className="text-2xl font-bold text-foreground">Профиль</h1>
+        {!editing && (
+          <button onClick={() => { setEditForm({ name: currentUser.name, username: currentUser.username, bio: currentUser.bio }); setEditing(true); }} className="flex items-center gap-1.5 text-sm text-primary font-medium hover:underline">
+            <Icon name="Pencil" size={14} />Редактировать
           </button>
-        ))}
+        )}
       </div>
 
+      {/* Card */}
       <div className="bg-white rounded-2xl border border-border p-6 mb-5 animate-fade-in">
-        <div className="flex items-start gap-5">
-          <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-xl shrink-0">{viewed.avatar}</div>
-          <div className="flex-1">
-            <h2 className="text-xl font-bold">{viewed.name}</h2>
-            <p className="text-sm text-muted-foreground">@{viewed.username} · с {viewed.joinedAt}</p>
-            {viewed.bio && <p className="text-sm mt-2 text-foreground/80">{viewed.bio}</p>}
-            <div className="flex items-center gap-2 mt-3">
-              <StarRating value={rating} />
-              <span className="text-sm font-semibold">{rating > 0 ? rating : "—"}</span>
-              <span className="text-sm text-muted-foreground">({userReviews.length} {reviewWord(userReviews.length)})</span>
+        {editing ? (
+          <form onSubmit={handleSave} className="flex flex-col gap-4">
+            <div className="flex items-center gap-4 mb-2">
+              <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-xl shrink-0">
+                {editForm.name.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase() || "?"}
+              </div>
+              <p className="text-sm text-muted-foreground">Аватар генерируется из имени</p>
             </div>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-border">
-          {[
-            { label: "Заданий размещено", value: tasks.filter((t) => t.authorId === viewed.id).length, icon: "FileText" },
-            { label: "Рейтинг", value: rating > 0 ? rating : "—", icon: "Star" },
-            { label: "Отзывов", value: userReviews.length, icon: "MessageSquare" },
-          ].map((stat) => (
-            <div key={stat.label} className="text-center p-3 bg-muted rounded-xl">
-              <Icon name={stat.icon} size={18} className="mx-auto mb-1.5 text-primary" />
-              <p className="text-xl font-bold text-foreground">{stat.value}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-sm font-medium">Имя и фамилия</Label>
+              <Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="rounded-xl" required />
             </div>
-          ))}
-        </div>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-sm font-medium">Telegram username</Label>
+              <Input placeholder="@username" value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} className="rounded-xl" required />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label className="text-sm font-medium">О себе</Label>
+              <Textarea value={editForm.bio} onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })} className="rounded-xl resize-none" rows={2} placeholder="Чем занимаетесь..." />
+            </div>
+            <div className="flex gap-2 pt-1">
+              <Button type="submit" size="sm" className="bg-primary text-primary-foreground rounded-xl">Сохранить</Button>
+              <Button type="button" size="sm" variant="outline" className="rounded-xl" onClick={() => setEditing(false)}>Отмена</Button>
+            </div>
+          </form>
+        ) : (
+          <>
+            <div className="flex items-start gap-5">
+              <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center text-primary-foreground font-bold text-xl shrink-0">{currentUser.avatar}</div>
+              <div className="flex-1">
+                <h2 className="text-xl font-bold">{currentUser.name}</h2>
+                <p className="text-sm text-muted-foreground">@{currentUser.username} · с {currentUser.joinedAt}</p>
+                {currentUser.bio && <p className="text-sm mt-2 text-foreground/80">{currentUser.bio}</p>}
+                <div className="flex items-center gap-2 mt-3">
+                  <StarRating value={rating} />
+                  <span className="text-sm font-semibold">{rating > 0 ? rating : "—"}</span>
+                  <span className="text-sm text-muted-foreground">({userReviews.length} {reviewWord(userReviews.length)})</span>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3 mt-5 pt-5 border-t border-border">
+              {[
+                { label: "Заданий", value: tasks.filter((t) => t.authorId === currentUser.id).length, icon: "FileText" },
+                { label: "Рейтинг", value: rating > 0 ? rating : "—", icon: "Star" },
+                { label: "Отзывов", value: userReviews.length, icon: "MessageSquare" },
+              ].map((s) => (
+                <div key={s.label} className="text-center p-3 bg-muted rounded-xl">
+                  <Icon name={s.icon} size={16} className="mx-auto mb-1 text-primary" />
+                  <p className="text-xl font-bold">{s.value}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
-      <div className="animate-fade-in mb-6" style={{ animationDelay: "80ms" }}>
-        <h3 className="font-semibold mb-3 text-foreground">Задания</h3>
+      {/* My tasks */}
+      <div className="mb-5 animate-fade-in" style={{ animationDelay: "80ms" }}>
+        <h3 className="font-semibold mb-3">Мои задания</h3>
         {userTasks.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground bg-white rounded-xl border border-border text-sm">Нет опубликованных заданий</div>
         ) : (
           <div className="flex flex-col gap-2">
             {userTasks.map((task) => (
               <div key={task.id} className="bg-white rounded-xl border border-border p-4 flex items-center justify-between gap-3">
-                <div>
-                  <p className="font-medium text-sm">{task.title}</p>
+                <div className="min-w-0">
+                  <p className="font-medium text-sm truncate">{task.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{task.createdAt} · {task.category}</p>
                 </div>
-                <div className="flex items-center gap-3 shrink-0">
+                <div className="flex items-center gap-2 shrink-0">
                   <span className="font-bold text-primary text-sm">{task.negotiable || !task.price ? "Договорная" : `${task.price.toLocaleString("ru")}₽`}</span>
-                  {isOwnProfile && (
-                    <button onClick={() => onDeleteTask(task.id)} className="text-muted-foreground hover:text-destructive transition-colors">
-                      <Icon name="Trash2" size={14} />
-                    </button>
-                  )}
+                  <button onClick={() => onDeleteTask(task.id)} className="text-muted-foreground hover:text-destructive transition-colors">
+                    <Icon name="Trash2" size={14} />
+                  </button>
                 </div>
               </div>
             ))}
@@ -459,24 +474,23 @@ function ProfilePage({ currentUser, users, tasks, reviews, onAddReview, onDelete
         )}
       </div>
 
+      {/* Reviews */}
       <div className="animate-fade-in" style={{ animationDelay: "120ms" }}>
         <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-foreground">Отзывы</h3>
-          {!isOwnProfile && !alreadyReviewed && (
-            <button onClick={() => setShowReviewForm((v) => !v)} className="text-sm text-primary font-medium hover:underline">
-              + Оставить отзыв
-            </button>
-          )}
+          <h3 className="font-semibold">Отзывы обо мне</h3>
+          <button onClick={() => setShowReviewForm((v) => !v)} className="text-sm text-primary font-medium hover:underline">
+            + Добавить отзыв
+          </button>
         </div>
 
         {showReviewForm && (
-          <form onSubmit={handleReview} className="bg-white rounded-xl border border-border p-4 mb-4 flex flex-col gap-3 animate-scale-in">
+          <form onSubmit={handleReview} className="bg-white rounded-xl border border-border p-4 mb-3 flex flex-col gap-3 animate-scale-in">
             <div className="flex flex-col gap-1">
               <Label className="text-sm font-medium">Оценка</Label>
               <StarRating value={reviewForm.rating} interactive onChange={(v) => setReviewForm({ ...reviewForm, rating: v })} />
             </div>
             <div className="flex flex-col gap-1">
-              <Label className="text-sm font-medium">Ваш отзыв</Label>
+              <Label className="text-sm font-medium">Отзыв</Label>
               <Textarea placeholder="Расскажите о совместной работе..." value={reviewForm.text} onChange={(e) => setReviewForm({ ...reviewForm, text: e.target.value })} className="rounded-xl resize-none" rows={3} required />
             </div>
             <div className="flex gap-2">
@@ -490,21 +504,21 @@ function ProfilePage({ currentUser, users, tasks, reviews, onAddReview, onDelete
           <div className="text-center py-8 text-muted-foreground bg-white rounded-xl border border-border text-sm">Отзывов пока нет</div>
         ) : (
           <div className="flex flex-col gap-3">
-            {userReviews.map((review) => (
-              <div key={review.id} className="bg-white rounded-xl border border-border p-4">
+            {userReviews.map((r) => (
+              <div key={r.id} className="bg-white rounded-xl border border-border p-4">
                 <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
                   <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-foreground">
-                      {review.authorName.split(" ").map((w) => w[0]).join("").slice(0, 2)}
+                    <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center text-xs font-bold">
+                      {r.authorName.split(" ").map((w) => w[0]).join("").slice(0, 2)}
                     </div>
-                    <span className="text-sm font-medium">{review.authorName}</span>
+                    <span className="text-sm font-medium">{r.authorName}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <StarRating value={review.rating} />
-                    <span className="text-xs text-muted-foreground">{review.createdAt}</span>
+                    <StarRating value={r.rating} />
+                    <span className="text-xs text-muted-foreground">{r.createdAt}</span>
                   </div>
                 </div>
-                <p className="text-sm text-muted-foreground">{review.text}</p>
+                <p className="text-sm text-muted-foreground">{r.text}</p>
               </div>
             ))}
           </div>
@@ -528,6 +542,7 @@ function ModerationPage({ tasks, onApprove, onReject, onDelete }: { tasks: Task[
   };
 
   const filtered = filter === "all" ? tasks : tasks.filter((t) => t.status === filter);
+  const counts = { all: tasks.length, pending: tasks.filter((t) => t.status === "pending").length, approved: tasks.filter((t) => t.status === "approved").length, rejected: tasks.filter((t) => t.status === "rejected").length };
 
   const statusBadge = (s: TaskStatus) => {
     const map = { pending: "bg-amber-50 text-amber-600 border-amber-100", approved: "bg-green-50 text-green-600 border-green-100", rejected: "bg-red-50 text-red-600 border-red-100" };
@@ -537,7 +552,7 @@ function ModerationPage({ tasks, onApprove, onReject, onDelete }: { tasks: Task[
 
   if (!unlocked) {
     return (
-      <div className="max-w-sm mx-auto px-4 py-20 animate-scale-in">
+      <div className="max-w-sm mx-auto px-4 py-20 pb-24 animate-scale-in">
         <div className="bg-white rounded-2xl border border-border p-8 text-center">
           <div className="w-14 h-14 bg-muted rounded-2xl flex items-center justify-center mx-auto mb-5">
             <Icon name="Lock" size={24} className="text-muted-foreground" />
@@ -555,22 +570,21 @@ function ModerationPage({ tasks, onApprove, onReject, onDelete }: { tasks: Task[
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
-      <div className="flex items-center justify-between mb-6 animate-slide-up">
+    <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
+      <div className="flex items-center justify-between mb-5 animate-slide-up">
         <div>
-          <h1 className="text-3xl font-bold text-foreground mb-1">Модерация</h1>
-          <p className="text-muted-foreground text-sm">Всего: {tasks.length} · На проверке: {tasks.filter((t) => t.status === "pending").length}</p>
+          <h1 className="text-2xl font-bold mb-0.5">Модерация</h1>
+          <p className="text-sm text-muted-foreground">Всего: {counts.all} · На проверке: {counts.pending}</p>
         </div>
-        <Button variant="outline" onClick={() => setUnlocked(false)} className="rounded-xl text-sm gap-2">
+        <Button variant="outline" onClick={() => setUnlocked(false)} className="rounded-xl text-sm gap-1.5">
           <Icon name="Lock" size={14} />Выйти
         </Button>
       </div>
 
-      <div className="flex gap-2 mb-5 flex-wrap animate-fade-in">
+      <div className="flex gap-1.5 mb-4 flex-wrap animate-fade-in">
         {(["all", "pending", "approved", "rejected"] as const).map((f) => {
           const labels = { all: "Все", pending: "На проверке", approved: "Одобренные", rejected: "Отклонённые" };
-          const counts = { all: tasks.length, pending: tasks.filter((t) => t.status === "pending").length, approved: tasks.filter((t) => t.status === "approved").length, rejected: tasks.filter((t) => t.status === "rejected").length };
-          return <button key={f} onClick={() => setFilter(f)} className={`text-sm px-3 py-1.5 rounded-full font-medium transition-all ${filter === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{labels[f]} <span className="opacity-70">({counts[f]})</span></button>;
+          return <button key={f} onClick={() => setFilter(f)} className={`text-xs px-3 py-1.5 rounded-full font-medium transition-all ${filter === f ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}>{labels[f]} ({counts[f]})</button>;
         })}
       </div>
 
@@ -586,21 +600,21 @@ function ModerationPage({ tasks, onApprove, onReject, onDelete }: { tasks: Task[
                 </div>
                 <h3 className="font-semibold">{task.title}</h3>
                 <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{task.description}</p>
-                <div className="flex items-center gap-3 mt-2 flex-wrap">
-                  <span className="text-sm font-bold text-primary">{task.negotiable || !task.price ? "Договорная" : `${task.price.toLocaleString("ru")}₽`}</span>
-                  <span className="text-xs text-muted-foreground">{PLATFORM_LABELS[task.platform].label} · {task.contact}</span>
-                  <span className="text-xs text-muted-foreground">Автор: {task.authorName}</span>
+                <div className="flex items-center gap-3 mt-2 flex-wrap text-xs text-muted-foreground">
+                  <span className="font-bold text-primary text-sm">{task.negotiable || !task.price ? "Договорная" : `${task.price.toLocaleString("ru")}₽`}</span>
+                  <span>{task.platform} · {task.contact}</span>
+                  <span>Автор: {task.authorName}</span>
                 </div>
               </div>
               <div className="flex gap-2 shrink-0 flex-wrap">
                 {task.status === "pending" && (
                   <>
-                    <Button onClick={() => onApprove(task.id)} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl gap-1.5"><Icon name="Check" size={14} />Одобрить</Button>
-                    <Button onClick={() => onReject(task.id)} size="sm" variant="outline" className="border-destructive/30 text-destructive hover:bg-red-50 rounded-xl gap-1.5"><Icon name="X" size={14} />Отклонить</Button>
+                    <Button onClick={() => onApprove(task.id)} size="sm" className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl gap-1"><Icon name="Check" size={13} />Одобрить</Button>
+                    <Button onClick={() => onReject(task.id)} size="sm" variant="outline" className="border-destructive/30 text-destructive hover:bg-red-50 rounded-xl gap-1"><Icon name="X" size={13} />Отклонить</Button>
                   </>
                 )}
-                <Button onClick={() => onDelete(task.id)} size="sm" variant="outline" className="border-destructive/30 text-destructive hover:bg-red-50 rounded-xl gap-1.5">
-                  <Icon name="Trash2" size={14} />Удалить
+                <Button onClick={() => onDelete(task.id)} size="sm" variant="outline" className="border-destructive/30 text-destructive hover:bg-red-50 rounded-xl gap-1">
+                  <Icon name="Trash2" size={13} />Удалить
                 </Button>
               </div>
             </div>
@@ -625,13 +639,13 @@ export default function Index() {
   const [reviews, setReviews] = useState<Review[]>(SEED_REVIEWS);
   const [contactTask, setContactTask] = useState<Task | null>(null);
 
-  const handleDeleteTask = (id: number) => setTasks((prev) => prev.filter((t) => t.id !== id));
-  const handleApprove = (id: number) => setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status: "approved" } : t)));
-  const handleReject = (id: number) => setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status: "rejected" } : t)));
+  const handleDeleteTask = (id: number) => setTasks((p) => p.filter((t) => t.id !== id));
+  const handleApprove = (id: number) => setTasks((p) => p.map((t) => t.id === id ? { ...t, status: "approved" } : t));
+  const handleReject = (id: number) => setTasks((p) => p.map((t) => t.id === id ? { ...t, status: "rejected" } : t));
 
   const navItems: { key: Page; label: string; icon: string }[] = [
     { key: "home", label: "Биржа", icon: "LayoutGrid" },
-    { key: "create", label: "Создать", icon: "Plus" },
+    { key: "create", label: "Создать", icon: "PlusCircle" },
     { key: "profile", label: "Профиль", icon: "User" },
   ];
 
@@ -639,40 +653,55 @@ export default function Index() {
     <div className="min-h-screen bg-background">
       {!currentUser && <RegisterModal onRegister={setCurrentUser} />}
 
+      {/* Top header — only logo + moderation */}
       <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-border">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+        <div className="max-w-5xl mx-auto px-4 h-13 flex items-center justify-between" style={{ height: "52px" }}>
           <button onClick={() => setPage("home")} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
               <Icon name="Zap" size={14} className="text-primary-foreground" />
             </div>
             <span className="font-bold text-base text-foreground">ФрилансБиржа</span>
           </button>
-          <nav className="flex items-center gap-1">
-            {navItems.map((item) => (
-              <button key={item.key} onClick={() => setPage(item.key)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${page === item.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
-                <Icon name={item.icon} size={14} />
-                <span className="hidden sm:inline">{item.label}</span>
-              </button>
-            ))}
-            <button onClick={() => setPage("moderation")} className={`ml-1 flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${page === "moderation" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setPage("moderation")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium transition-all ${page === "moderation" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}>
               <Icon name="ShieldCheck" size={14} />
               <span className="hidden sm:inline">Модерация</span>
             </button>
             {currentUser && (
-              <div className="ml-2 w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
+              <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold shrink-0">
                 {currentUser.avatar.slice(0, 1)}
               </div>
             )}
-          </nav>
+          </div>
         </div>
       </header>
 
       <main>
         {page === "home" && <HomePage tasks={tasks} currentUserId={currentUser?.id ?? null} onContact={setContactTask} onDelete={handleDeleteTask} />}
         {page === "create" && currentUser && <CreateTaskPage currentUser={currentUser} onTaskCreated={(t) => { setTasks((p) => [t, ...p]); setPage("home"); }} />}
-        {page === "profile" && currentUser && <ProfilePage currentUser={currentUser} users={SEED_USERS} tasks={tasks} reviews={reviews} onAddReview={(r) => setReviews((p) => [r, ...p])} onDeleteTask={handleDeleteTask} />}
+        {page === "profile" && currentUser && <ProfilePage currentUser={currentUser} onUpdateUser={setCurrentUser} tasks={tasks} reviews={reviews} onAddReview={(r) => setReviews((p) => [r, ...p])} onDeleteTask={handleDeleteTask} />}
         {page === "moderation" && <ModerationPage tasks={tasks} onApprove={handleApprove} onReject={handleReject} onDelete={handleDeleteTask} />}
       </main>
+
+      {/* Bottom Tab Bar */}
+      {page !== "moderation" && (
+        <nav className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-border">
+          <div className="max-w-lg mx-auto flex items-center">
+            {navItems.map((item) => {
+              const active = page === item.key;
+              return (
+                <button key={item.key} onClick={() => setPage(item.key)} className={`flex-1 flex flex-col items-center justify-center gap-1 py-3 transition-all ${active ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>
+                  <div className={`transition-all ${active ? "scale-110" : ""}`}>
+                    <Icon name={item.icon} size={22} />
+                  </div>
+                  <span className={`text-xs font-medium ${active ? "text-primary" : ""}`}>{item.label}</span>
+                  {active && <div className="absolute top-0 w-6 h-0.5 bg-primary rounded-full" style={{ position: "relative", marginTop: "-2px" }} />}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      )}
 
       <ContactModal task={contactTask} onClose={() => setContactTask(null)} />
     </div>
